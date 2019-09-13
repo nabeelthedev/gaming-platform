@@ -1,23 +1,10 @@
-extends Node
+extends StaticBody
+var gridSize = 10
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
-
-# Called when the node enters the scene tree for the first time.
 func _ready():
-	add_child(camera())
-	add_child(grid())
-	add_child(Polygon.new().create())
+	get_node("/root/PolygonCreator/Camera").translate(Vector3(gridSize/2,gridSize/2,0))
 
-func camera():
-	var camera = Camera.new()
-	camera.name = "Camera"
-	camera.translate(Vector3(0,0,10))
-	return camera
-
-func grid():
-	var gridSize = 10
+func create():
 	
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_LINES)
@@ -27,27 +14,27 @@ func grid():
 		st.add_vertex(Vector3(0, i, 0))
 		st.add_vertex(Vector3(gridSize, i, 0))
 	
-	var sb = StaticBody.new()
 	var mi = MeshInstance.new()
 	mi.set_mesh(st.commit())
-	sb.add_child(mi)
-	get_node("Camera").translate(Vector3(gridSize/2,gridSize/2,0))
+	add_child(mi)
 	
 	for i in range (gridSize + 1):
 		for j in range (gridSize + 1):
 			add_child(VertexButton.new().create(i,j))
-	return sb
+	return self
 	
 class VertexButton extends StaticBody:
 	var toggled = false
-	var xPos = null
-	var yPos = null
+	var x = null
+	var y = null
+	var z = null
+	
 	func create(x, y):
 		var buttonSize = .2
 		var coordinateSize = buttonSize/2
-		xPos = x
-		yPos = y
-		
+		self.x = x
+		self.y = y
+		self.z = 0
 		var pva = PoolVector3Array()
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
@@ -86,46 +73,17 @@ class VertexButton extends StaticBody:
 		return self
 		
 	func onClick(camera, event, click_position, click_normal, shape_idx):
+		var polygon = get_node("/root/PolygonCreator/Polygon")
 		if event is InputEventMouseButton and !event.pressed:
 			var mi = self.get_node("MeshInstance")
 			var material = SpatialMaterial.new()
 			if !self.toggled:
 				material.albedo_color = Color8(255,0,0)
-				get_node("/root/Main/Polygon").addVertex(self.xPos, self.yPos, 0)
+				if !polygon.addVertex(self):
+					material.albedo_color = Color8(0,0,255)
 			else:
 				material.albedo_color = Color8(0,0,255)
-				get_node("/root/Main/Polygon").removeVertex(self.xPos, self.yPos, 0)
+				polygon.removeVertex(self)
 			self.toggled = !self.toggled
 			mi.set_surface_material(0, material)
-			
-			
-func draw():
-	pass
-	
-class Polygon extends StaticBody:
-	var vertices = []
-	
-	func create():
-		name = "Polygon"
-		var mi = MeshInstance.new()
-		mi.name = "MeshInstance"
-		add_child(mi)
-		return self
-	func addVertex(x, y, z):
-		vertices.append([x, y, z])
-		print(vertices)
-		draw()
-	func removeVertex(x, y, z):
-		vertices.erase([x, y, z])
-		print(vertices)
-		draw()
-	func draw():
-		if vertices.size() < 3:
-			get_node("MeshInstance").set_mesh(null)
-		else:
-			var st = SurfaceTool.new()
-			st.begin(Mesh.PRIMITIVE_TRIANGLES)
-			for i in vertices:
-				st.add_vertex(Vector3(i[0], i[1], i[2]))
-			get_node("MeshInstance").set_mesh(st.commit())
-	
+			polygon.draw()
