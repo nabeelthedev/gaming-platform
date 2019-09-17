@@ -2,10 +2,6 @@ extends StaticBody
 var gridSize = 10
 
 func _ready():
-	get_node("/root/PolygonCreator/Camera").translate(Vector3(gridSize/2,gridSize/2,0))
-
-func create():
-	
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_LINES)
 	for i in range(gridSize + 1):
@@ -20,7 +16,9 @@ func create():
 	
 	for i in range (gridSize + 1):
 		for j in range (gridSize + 1):
-			add_child(VertexButton.new().create(i,j))
+			add_child(VertexButton.new().create(i,j, gridSize))
+	get_node("/root/PolygonCreator/Camera").translate(Vector3(gridSize/2,gridSize/2,gridSize))
+	get_node("/root/PolygonCreator/Polygon").translate(Vector3(gridSize/2,gridSize/2,-gridSize/2))
 	return self
 	
 class VertexButton extends StaticBody:
@@ -28,21 +26,22 @@ class VertexButton extends StaticBody:
 	var x = null
 	var y = null
 	var z = null
+	var zOffset = .001
 	
-	func create(x, y):
+	func create(x, y, gridSize):
 		var buttonSize = .2
 		var coordinateSize = buttonSize/2
-		self.x = x
-		self.y = y
-		self.z = 0
+		self.x = x - (gridSize/2)
+		self.y = y - (gridSize/2)
+		self.z = gridSize/2
 		var pva = PoolVector3Array()
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 		
-		var botLeft = Vector3(x - coordinateSize, y - coordinateSize, 0)
-		var topLeft = Vector3(x - coordinateSize, y + coordinateSize, 0)
-		var botRight = Vector3(x + coordinateSize, y - coordinateSize, 0)
-		var topRight = Vector3(x + coordinateSize, y + coordinateSize, 0)
+		var botLeft = Vector3(x - coordinateSize, y - coordinateSize, zOffset)
+		var topLeft = Vector3(x - coordinateSize, y + coordinateSize, zOffset)
+		var botRight = Vector3(x + coordinateSize, y - coordinateSize, zOffset)
+		var topRight = Vector3(x + coordinateSize, y + coordinateSize, zOffset)
 		
 		st.add_vertex(botLeft)
 		st.add_vertex(topLeft)

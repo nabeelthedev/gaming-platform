@@ -2,9 +2,21 @@ extends StaticBody
 
 var vertices = []
 var pendingVertices = []
+var pendingVerticesRefs = []
 var C = {}
+var normal = Vector3(0,0,1)
+var currentFace = 0
+var vertexFaceTransform = [
+{"x": {"axis":"x", "sign":1}, "y":{"axis":"y", "sign":1}, "z":{"axis":"z", "sign":1}},
+{"x": {"axis":"z", "sign":1}, "y":{"axis":"y", "sign":1}, "z":{"axis":"x", "sign":-1}},
+{"x": {"axis":"x", "sign":-1}, "y":{"axis":"y", "sign":1}, "z":{"axis":"z", "sign":-1}},
+{"x": {"axis":"z", "sign":-1}, "y":{"axis":"y", "sign":1}, "z":{"axis":"x", "sign":1}},
+{"x": {"axis":"x", "sign":1}, "y":{"axis":"z", "sign":1}, "z":{"axis":"y", "sign":-1}},
+{"x": {"axis":"x", "sign":1}, "y":{"axis":"z", "sign":-1}, "z":{"axis":"y", "sign":1}}]
 
-func create():
+signal polygon_face_changed
+
+func _ready():
 	name = "Polygon"
 	var mi = MeshInstance.new()
 	mi.name = "MeshInstance"
@@ -13,8 +25,8 @@ func create():
 	
 func addVertex(ref):
 	if pendingVertices.size() == 2:
-		var P = {"x":pendingVertices[0].x, "y":pendingVertices[0].y, "z":pendingVertices[0].z}
-		var Q = {"x":pendingVertices[1].x, "y":pendingVertices[1].y, "z":pendingVertices[1].z}
+		var P = {"x":pendingVertices[0][0], "y":pendingVertices[0][1], "z":pendingVertices[0][2]}
+		var Q = {"x":pendingVertices[1][0], "y":pendingVertices[1][1], "z":pendingVertices[1][2]}
 		var R = {"x":ref.x, "y":ref.y, "z":ref.z}
 		
 		var PQ = {"x": Q.x - P.x, "y":Q.y - P.y, "z":Q.z - P.z}
@@ -25,37 +37,61 @@ func addVertex(ref):
 		var area = PQPRMag * .5
 		if area == 0:
 			return false
-		
-		C = {"x":float(P.x + Q.x + R.x)/3 , "y":float(P.y + Q.y + R.y)/3, "z":float(P.z + Q.z + R.z)/3}
-
-	pendingVertices.append(ref)
+	pendingVertices.append([ref.x, ref.y, ref.z])
+	pendingVerticesRefs.append(ref)
 	return true
 	
 func removeVertex(ref):
-	pendingVertices.erase(ref)
+	pendingVertices.erase([ref.x, ref.y, ref.z])
+	pendingVerticesRefs.erase(ref)
 	return true
 	
 func draw():
 	if pendingVertices.size() != 3:
 		return false
+	
+	for i in pendingVertices:
+		var coords = {"x":i[0], "y":i[1], "z":i[2]}
+		i[0] = coords[vertexFaceTransform[currentFace]["x"]["axis"]] * vertexFaceTransform[currentFace]["x"]["sign"]
+		i[1] = coords[vertexFaceTransform[currentFace]["y"]["axis"]] * vertexFaceTransform[currentFace]["y"]["sign"]
+		i[2] = coords[vertexFaceTransform[currentFace]["z"]["axis"]] * vertexFaceTransform[currentFace]["z"]["sign"]
+	
+	C = {"x":float(pendingVertices[0][0] + pendingVertices[1][0] + pendingVertices[2][0])/3 , "y":float(pendingVertices[0][1] + pendingVertices[1][1] + pendingVertices[2][1])/3, "z":float(pendingVertices[0][2] + pendingVertices[1][2] + pendingVertices[2][2])/3}
 	pendingVertices.sort_custom(self, "sort")
 	vertices = vertices + pendingVertices
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in vertices:
-		st.add_vertex(Vector3(i.x, i.y, i.z))
+		st.add_vertex(Vector3(i[0], i[1], i[2]))
 	get_node("MeshInstance").set_mesh(st.commit())
-	
+	clearPendingVertices()
+
+func clearPendingVertices():
 	var material = SpatialMaterial.new()
 	material.albedo_color = Color8(0,0,255)
-	
-	for i in pendingVertices:
+	for i in pendingVerticesRefs:
 		var mi = i.get_node("MeshInstance")
 		mi.set_surface_material(0, material)
 		i.toggled = false
 	pendingVertices.clear()
+	pendingVerticesRefs.clear()
 	
-func sort(a, b):
+func sort(inputA, inputB):
+	var a = {"x":inputA[0], "y": inputA[1], "z":inputA[2]}
+	var b = {"x":inputB[0], "y": inputB[1], "z":inputB[2]}
+	var P = Vector3(C.x, C.y, C.z)
+	var Q = Vector3(a.x,a.y,a.z)
+	var R = Vector3(b.x,b.y,b.z)
+	
+	var side1 = Q - P
+	var side2 = R - P
+	var cross = side1.cross(side2)
+	var dot = normal.dot(cross)
+	return dot < 0
+	
+func sort_old(inputA, inputB):
+	var a = {"x":inputA[0], "y": inputA[1]}
+	var b = {"x":inputB[0], "y": inputB[1]}
 	if a.x - C.x >= 0 && b.x - C.x < 0:
 		return true
 	if a.x - C.x < 0 and b.x - C.x >= 0:
@@ -74,3 +110,20 @@ func sort(a, b):
 	var d1 = (a.x - C.x) * (a.x - C.x) + (a.y - C.y) * (a.y - C.y)
 	var d2 = (b.x - C.x) * (b.x - C.x) + (b.y - C.y) * (b.y - C.y)
 	return d1 > d2
+	
+func changeFace(face):
+	currentFace = face
+	match face:
+		0:
+			normal = Vector3(0,0,1)
+		1:
+			normal = Vector3(1,0,0)
+		2:
+			normal = Vector3(0,0,-1)
+		3:
+			normal = Vector3(-1,0,0)
+		4:
+			normal = Vector3(0,1,0)
+		5:
+			normal = Vector3(0,-1,0)
+	emit_signal("polygon_face_changed")
