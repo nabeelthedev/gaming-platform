@@ -17,8 +17,8 @@ func _ready():
 	for i in range (gridSize + 1):
 		for j in range (gridSize + 1):
 			add_child(VertexButton.new().create(i,j, gridSize))
-	get_node("/root/PolygonCreator/Camera").translate(Vector3(gridSize/2,gridSize/2,gridSize))
-	get_node("/root/PolygonCreator/Polygon").translate(Vector3(gridSize/2,gridSize/2,-gridSize/2))
+	get_node("/root/Main/Camera").translate(Vector3(gridSize/2,gridSize/2,gridSize))
+	get_node("/root/Main/Polygon").translate(Vector3(gridSize/2,gridSize/2,-gridSize/2))
 	return self
 	
 class VertexButton extends StaticBody:
@@ -72,7 +72,7 @@ class VertexButton extends StaticBody:
 		return self
 		
 	func onClick(camera, event, click_position, click_normal, shape_idx):
-		var polygon = get_node("/root/PolygonCreator/Polygon")
+		var polygon = get_node("/root/Main/Polygon")
 		if event is InputEventMouseButton and !event.pressed:
 			var mi = self.get_node("MeshInstance")
 			var material = SpatialMaterial.new()

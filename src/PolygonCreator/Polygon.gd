@@ -59,11 +59,14 @@ func draw():
 	C = {"x":float(pendingVertices[0][0] + pendingVertices[1][0] + pendingVertices[2][0])/3 , "y":float(pendingVertices[0][1] + pendingVertices[1][1] + pendingVertices[2][1])/3, "z":float(pendingVertices[0][2] + pendingVertices[1][2] + pendingVertices[2][2])/3}
 	pendingVertices.sort_custom(self, "sort")
 	vertices = vertices + pendingVertices
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in vertices:
-		st.add_vertex(Vector3(i[0], i[1], i[2]))
-	get_node("MeshInstance").set_mesh(st.commit())
+#	var st = SurfaceTool.new()
+#	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+#	for i in vertices:
+#		st.add_vertex(Vector3(i[0], i[1], i[2]))
+#	get_node("MeshInstance").set_mesh(st.commit())
+
+	add_child(Triangle.new().draw(pendingVertices))
+	
 	clearPendingVertices()
 
 func clearPendingVertices():
@@ -127,3 +130,31 @@ func changeFace(face):
 		5:
 			normal = Vector3(0,-1,0)
 	emit_signal("polygon_face_changed")
+	
+class Triangle extends StaticBody:
+	func _ready():
+	#	sb.translate(Vector3(5,5,-5))
+		connect("input_event", self, "onClick")
+	func draw(pendingVertices):
+		var pva = PoolVector3Array()
+		var st = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in pendingVertices:
+			st.add_vertex(Vector3(i[0], i[1], i[2]))
+			pva.append(Vector3(i[0], i[1], i[2]))
+		
+		var convexShape = ConvexPolygonShape.new()
+		convexShape.set_points(pva)
+		
+		var mi = MeshInstance.new()
+		mi.name = "MeshInstance"
+		mi.set_mesh(st.commit())
+		add_child(mi)
+		
+		var cs = CollisionShape.new()
+		cs.set_shape(convexShape)
+		add_child(cs)
+		return self
+	func onClick(camera, event, click_position, click_normal, shape_idx):
+		if event is InputEventMouseButton and !event.pressed:
+			print(self)

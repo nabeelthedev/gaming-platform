@@ -94,7 +94,7 @@ func FaceLabel():
 	return label
 		
 func onPolygonCreated():
-	Polygon = get_node("/root/PolygonCreator/Polygon")
+	Polygon = get_node("/root/Main/Polygon")
 	Polygon.connect("polygon_face_changed", self, "onFaceChange")
 	FL.text = String(Polygon.currentFace)
 	
