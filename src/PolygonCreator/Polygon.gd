@@ -13,6 +13,7 @@ var vertexFaceTransform = [
 {"x": {"axis":"z", "sign":-1}, "y":{"axis":"y", "sign":1}, "z":{"axis":"x", "sign":1}},
 {"x": {"axis":"x", "sign":1}, "y":{"axis":"z", "sign":1}, "z":{"axis":"y", "sign":-1}},
 {"x": {"axis":"x", "sign":1}, "y":{"axis":"z", "sign":-1}, "z":{"axis":"y", "sign":1}}]
+var toggledTriangles = []
 
 signal polygon_face_changed
 
@@ -132,6 +133,7 @@ func changeFace(face):
 	emit_signal("polygon_face_changed")
 	
 class Triangle extends StaticBody:
+	var toggled = false
 	func _ready():
 	#	sb.translate(Vector3(5,5,-5))
 		connect("input_event", self, "onClick")
@@ -149,6 +151,9 @@ class Triangle extends StaticBody:
 		var mi = MeshInstance.new()
 		mi.name = "MeshInstance"
 		mi.set_mesh(st.commit())
+		var material = SpatialMaterial.new()
+		material.albedo_color = Color8(0,128,255)
+		mi.set_surface_material(0, material)
 		add_child(mi)
 		
 		var cs = CollisionShape.new()
@@ -157,4 +162,20 @@ class Triangle extends StaticBody:
 		return self
 	func onClick(camera, event, click_position, click_normal, shape_idx):
 		if event is InputEventMouseButton and !event.pressed:
+			var mi = self.get_node("MeshInstance")
+			var material = SpatialMaterial.new()
+			var toggledTriangles = get_parent().toggledTriangles
+			var deleteButton = get_node("/root/Main/UI/DeleteButton")
+			if !self.toggled:
+				material.albedo_color = Color8(255,0,0)
+				toggledTriangles.append(self)
+				if deleteButton.disabled:
+					deleteButton.disabled = false
+			else:
+				material.albedo_color = Color8(0,128,255)
+				toggledTriangles.erase(self)
+				if toggledTriangles.size() == 0 and !deleteButton.disabled:
+					deleteButton.disabled = true
+			self.toggled = !self.toggled
+			mi.set_surface_material(0, material)
 			print(self)

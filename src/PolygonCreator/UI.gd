@@ -3,16 +3,19 @@ var L = LeftB()
 var R = RightB()
 var U = UpB()
 var D = DownB()
+var delete = DeleteB()
 var Polygon
 var FL = FaceLabel()
 
 func _ready():
+	name = "UI"
 	get_parent().connect("polygon_created", self, "onPolygonCreated")
 	add_child(L)
 	add_child(R)
 	add_child(U)
 	add_child(D)
 	add_child(FL)
+	add_child(delete)
 	return self
 			
 func LeftB():
@@ -100,3 +103,20 @@ func onPolygonCreated():
 	
 func onFaceChange():
 	FL.text = String(Polygon.currentFace)
+	
+func DeleteB():
+	var button = Button.new()
+	button.name = "DeleteButton"
+	button.text = "Delete"
+	button.disabled = true
+	button.connect("pressed", self, "onClickDeleteB")
+	return button
+	
+func onClickDeleteB():
+	var Polygon = get_node("/root/Main/Polygon")
+	print("DELETING TOGGLED TRIANGLES...")
+	for i in range(Polygon.toggledTriangles.size()):
+		Polygon.toggledTriangles[0].queue_free()
+		Polygon.toggledTriangles.remove(0)
+	self.get_node("DeleteButton").disabled = true
+	return true
