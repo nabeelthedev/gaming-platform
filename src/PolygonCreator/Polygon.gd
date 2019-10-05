@@ -134,9 +134,12 @@ func changeFace(face):
 	
 class Triangle extends StaticBody:
 	var toggled = false
+	var colors = {"default": Color8(128,128,128), "selected": Color8(128,32,32), "hover_default": Color8(160,160,160), "hover_selected": Color8(160,32,32)}
 	func _ready():
 	#	sb.translate(Vector3(5,5,-5))
 		connect("input_event", self, "onClick")
+		connect("mouse_entered", self, "onEntered")
+		connect("mouse_exited", self, "onExited")
 	func draw(pendingVertices):
 		var pva = PoolVector3Array()
 		var st = SurfaceTool.new()
@@ -152,7 +155,7 @@ class Triangle extends StaticBody:
 		mi.name = "MeshInstance"
 		mi.set_mesh(st.commit())
 		var material = SpatialMaterial.new()
-		material.albedo_color = Color8(0,128,255)
+		material.albedo_color = colors.default
 		mi.set_surface_material(0, material)
 		add_child(mi)
 		
@@ -167,15 +170,31 @@ class Triangle extends StaticBody:
 			var toggledTriangles = get_parent().toggledTriangles
 			var deleteButton = get_node("/root/Main/UI/DeleteButton")
 			if !self.toggled:
-				material.albedo_color = Color8(255,0,0)
+				material.albedo_color = colors.selected
 				toggledTriangles.append(self)
 				if deleteButton.disabled:
 					deleteButton.disabled = false
 			else:
-				material.albedo_color = Color8(0,128,255)
+				material.albedo_color = colors.default
 				toggledTriangles.erase(self)
 				if toggledTriangles.size() == 0 and !deleteButton.disabled:
 					deleteButton.disabled = true
 			self.toggled = !self.toggled
 			mi.set_surface_material(0, material)
 			print(self)
+	func onEntered():
+		var mi = self.get_node("MeshInstance")
+		var material = SpatialMaterial.new()
+		if self.toggled:
+			material.albedo_color = colors.hover_selected
+		else:
+			material.albedo_color = colors.hover_default
+		mi.set_surface_material(0, material)
+	func onExited():
+		var mi = self.get_node("MeshInstance")
+		var material = SpatialMaterial.new()
+		if self.toggled:
+			material.albedo_color = colors.selected
+		else:
+			material.albedo_color = colors.default
+		mi.set_surface_material(0, material)

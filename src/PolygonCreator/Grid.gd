@@ -1,14 +1,15 @@
 extends StaticBody
 var gridSize = 10
+var zOffset = .001
 
 func _ready():
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_LINES)
 	for i in range(gridSize + 1):
-		st.add_vertex(Vector3(i, 0, 0))
-		st.add_vertex(Vector3(i, gridSize, 0))
-		st.add_vertex(Vector3(0, i, 0))
-		st.add_vertex(Vector3(gridSize, i, 0))
+		st.add_vertex(Vector3(i, 0, zOffset))
+		st.add_vertex(Vector3(i, gridSize, zOffset))
+		st.add_vertex(Vector3(0, i, zOffset))
+		st.add_vertex(Vector3(gridSize, i, zOffset))
 	
 	var mi = MeshInstance.new()
 	mi.set_mesh(st.commit())
