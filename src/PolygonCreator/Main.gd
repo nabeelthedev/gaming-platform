@@ -1,8 +1,8 @@
 extends Node
 
-var Polygon = preload("res://src/PolygonCreator/Polygon.gd")
-var Grid = preload("res://src/PolygonCreator/Grid.gd")
-var UI = preload("res://src/PolygonCreator/UI.gd")
+const Polygon = preload("res://src/PolygonCreator/Polygon.gd")
+const Grid = preload("res://src/PolygonCreator/Grid.gd")
+const UI = preload("res://src/PolygonCreator/UI.gd")
 
 signal polygon_created
 
@@ -11,7 +11,7 @@ func _ready():
 	add_child(camera())
 	add_child(UI.new())
 	add_child(Polygon.new())
-	emit_signal("polygon_created")
+#	emit_signal("polygon_created")
 	add_child(Grid.new())
 
 func camera():

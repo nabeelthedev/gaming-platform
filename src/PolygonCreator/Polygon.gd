@@ -15,14 +15,23 @@ var vertexFaceTransform = [
 {"x": {"axis":"x", "sign":1}, "y":{"axis":"z", "sign":-1}, "z":{"axis":"y", "sign":1}}]
 var toggledTriangles = []
 
+signal polygon_created
 signal polygon_face_changed
 
-func _ready():
+func _init():
 	name = "Polygon"
 	var mi = MeshInstance.new()
 	mi.name = "MeshInstance"
 	add_child(mi)
-	return self
+#	return self
+
+func _ready():
+#	name = "Polygon"
+#	var mi = MeshInstance.new()
+#	mi.name = "MeshInstance"
+#	add_child(mi)
+#	return self
+	get_node("/root/Main").emit_signal("polygon_created")
 	
 func addVertex(ref):
 	if pendingVertices.size() == 2:
