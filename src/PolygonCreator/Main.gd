@@ -1,18 +1,11 @@
 extends Node
 
-const Polygon = preload("res://src/PolygonCreator/Polygon.gd")
-const Grid = preload("res://src/PolygonCreator/Grid.gd")
-const UI = preload("res://src/PolygonCreator/UI.gd")
-
-signal polygon_created
+const Canvas = preload("res://src/PolygonCreator/Canvas.gd")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	add_child(camera())
-	add_child(UI.new())
-	add_child(Polygon.new())
-#	emit_signal("polygon_created")
-	add_child(Grid.new())
+	add_child(Canvas.new())
 
 func camera():
 	var camera = Camera.new()
